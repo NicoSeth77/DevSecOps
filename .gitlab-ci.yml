@@ -1,0 +1,21 @@
+# Définition du pipeline CI/CD
+stages:
+  - build
+  - test
+  - deploy
+
+# Définition des jobs
+build:
+  stage: build
+  script:
+    - echo "Building the application..."
+
+test:
+  stage: test
+  script:
+    - echo "Running unit tests..."
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Deploying the application to production..."
