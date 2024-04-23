@@ -1,21 +1,21 @@
 # Définition du pipeline CI/CD
 stages:
-  - build
-  - test
-  - deploy
+  - plan
+  - apply
 
 # Définition des jobs
-build:
-  stage: build
+terraform_plan:
+  stage: plan
   script:
-    - echo "Building the application..."
+    - terraform init
+    - terraform plan -out=tfplan
+  artifacts:
+    paths:
+      - tfplan
 
-test:
-  stage: test
+terraform_apply:
+  stage: apply
   script:
-    - echo "Running unit tests..."
-
-deploy:
-  stage: deploy
-  script:
-    - echo "Deploying the application to production..."
+    - terraform apply tfplan
+  only:
+    - master
