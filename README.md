@@ -46,6 +46,7 @@ sudo apt install ansible
 Pour cloner la repertoire 
 
 ```bash
+sudo apt install git
 git clone https://github.com/NicoSeth77/DevSecOps
 ```
 
