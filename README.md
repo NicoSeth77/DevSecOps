@@ -22,9 +22,20 @@ Docker est une plateforme open-source qui permet aux développeurs de créer, d�
 
 Fedora est une distribution Linux libre et open-source, développée par une communauté de passionnés et sponsorisée par Red Hat. Elle est connue pour son approche à la pointe de la technologie, intégrant souvent de nouvelles fonctionnalités et des logiciels innovants avant les autres distributions.
 
-# Prerequis
+Notre environemment :
 
-Si Ansible n'est pas installé sur la machine principale
+- Serveur Proxmox :
+    - VM Fedora CoreOs : 192.168.10.209
+    - VM Debian : 192.168.10.207
+
+# Installation
+
+Sur le Fedora CoreOs :
+
+
+
+
+Sur le Debian :
 
 ```bash
 sudo apt-add-repository ppa:ansible/ansible && sudo apt update && sudo apt install ansible
