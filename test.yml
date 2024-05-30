@@ -1,0 +1,53 @@
+---
+- name: Deploy Docker Containers
+  hosts: debian_servers
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Ensure dependencies for Docker are installed
+      apt:
+        name: 
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Add Docker’s official GPG key
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+
+    - name: Add Docker apt repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable
+        state: present
+
+    - name: Ensure Docker is installed
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Pull Docker image
+      docker_image:
+        name: nginx
+        source: pull
+
+    - name: Run Docker container
+      docker_container:
+        name: nginx_container
+        image: nginx
+        state: started
+        ports:
+          - "80:80"
