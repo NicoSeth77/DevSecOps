@@ -28,7 +28,7 @@
 
     - name: Ensure latest version of Docker is installed
       command: dnf install -y docker
-      when: docker_version.stdout is search("Docker version 20")
+      when: "'Docker version 20' not in docker_version.stdout"
 
     - name: Pull Docker image
       docker_image:
