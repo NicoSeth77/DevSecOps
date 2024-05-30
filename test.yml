@@ -3,10 +3,16 @@
   hosts: all
   become: yes
   tasks:
-    - name: Ensure python3-apt is installed
+    - name: Check if python3-apt is already installed
+      command: dpkg -l python3-apt
+      register: python3_apt_installed
+      ignore_errors: yes
+
+    - name: Install python3-apt if not installed
       apt:
         name: python3-apt
         state: present
+      when: python3_apt_installed.rc != 0
 
     - name: Update apt cache
       apt:
