@@ -3,28 +3,25 @@
   hosts: fedora_coreos
   become: yes
   tasks:
-    - name: Ensure required packages are installed
-      package:
-        name: 
-          - dnf-plugins-core
-        state: present
-
-    - name: Ensure Docker is installed
-      package:
-        name: docker
-        state: present
-
-    - name: Check if Docker is installed
-      command: docker --version
-      register: docker_version
-      failed_when: docker_version.rc != 0
-      changed_when: false
 
     - name: Start Docker service
       systemd:
         name: docker
         state: started
         enabled: yes
+
+    - name: Pull Docker image
+      docker_image:
+        name: nginx
+        source: pull
+
+    - name: Run Docker container
+      docker_container:
+        name: nginx_container
+        image: nginx
+        state: started
+        ports:
+          - "80:80"
 
     - name: Ensure latest version of Docker is installed
       command: dnf install -y docker
@@ -42,3 +39,18 @@
         state: started
         ports:
           - "80:80"
+
+    - name: Ensure required packages are installed
+      rpm-ostree:
+        name: dnf-plugins-core
+        state: present
+
+    - name: Install Wireshark
+      rpm-ostree:
+        name: wireshark
+        state: present
+      register: wireshark_result
+
+    - name: Debug Wireshark installation
+      debug:
+        msg: "Wireshark installation: {{ wireshark_result }}"
