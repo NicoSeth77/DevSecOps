@@ -1,32 +1,13 @@
 ---
-- name: Deploy Docker Containers
-  hosts: fedora_coreos
-  become: yes
-  tasks:
-
-    - name: Start Docker service
-      systemd:
-        name: docker
-        state: started
-        enabled: yes
-
-    - name: Pull Docker image
-      docker_image:
-        name: nginx
-        source: pull
-
-    - name: Run Docker container
-      docker_container:
-        name: nginx_container
-        image: nginx
-        state: started
-        ports:
-          - "80:80"
-
 - name: Install Wireshark
   hosts: all
   become: yes
   tasks:
+    - name: Ensure python3-apt is installed
+      apt:
+        name: python3-apt
+        state: present
+
     - name: Update apt cache
       apt:
         update_cache: yes
@@ -52,4 +33,3 @@
     - name: Inform user to log out and log back in
       debug:
         msg: "You need to log out and log back in for the group changes to take effect."
-
