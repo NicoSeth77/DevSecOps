@@ -19,10 +19,10 @@ Fedora est une distribution Linux libre et open-source, développée par une com
 
 # Prerequis
 
-Si Ansible n'est pas installé sur la machine
+Si Ansible n'est pas installé sur la machine principale
 
 ```bash
-sudo apt-add-repository ppa:ansible/ansible sudo apt update sudo apt install ansible
+sudo apt-add-repository ppa:ansible/ansible && sudo apt update && sudo apt install ansible
 ```
 
 Pour cloner la repertoire 
@@ -30,3 +30,6 @@ Pour cloner la repertoire
 ```bash
 git clone https://github.com/NicoSeth77/DevSecOps
 ```
+
+
+
