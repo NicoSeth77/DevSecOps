@@ -3,10 +3,6 @@
   hosts: fedora_coreos
   become: yes
   tasks:
-    - name: Ensure Docker is installed
-      package:
-        name: docker
-        state: present
 
     - name: Start Docker service
       systemd:
