@@ -38,7 +38,9 @@ Sur le Fedora CoreOs :
 Sur le Debian :
 
 ```bash
-sudo apt-add-repository ppa:ansible/ansible && sudo apt update && sudo apt install ansible
+sudo apt-add-repository ppa:ansible/ansible
+sudo apt update
+sudo apt install ansible
 ```
 
 Pour cloner la repertoire 
