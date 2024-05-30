@@ -4,6 +4,11 @@ Pour être agile, les entreprises s'orientent vers le concept de DevOps voire De
 
 La mise en place d'une «Usine DevSecOps » ( DevSecOps Factory) permet aux entreprises de migrer des applications traditionnelles vers des applications conteneurisées pour optimiser les ressources et préparer la migration vers les micro-services. 
 
+Le projet consiste à :
+
+- Réaliser rapidement une étude sur le principe de fonctionnement du concept DevSecOps et les outils associés, 
+- Étudier, préparer et déployer une usine de production DevSecOps, 
+- Industrialiser le déploiement des usines DevSecOps à l’aide des outils IaC. 
 
 # Ansible
 
