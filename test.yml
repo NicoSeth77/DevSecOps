@@ -1,37 +1,24 @@
 ---
 - name: Deploy Docker Containers
-  hosts: debian_servers
+  hosts: fedora_coreos
   become: yes
   tasks:
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-
-    - name: Ensure dependencies for Docker are installed
-      apt:
+    - name: Ensure required packages are installed
+      package:
         name: 
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - gnupg
-          - lsb-release
-        state: present
-
-    - name: Add Docker’s official GPG key
-      apt_key:
-        url: https://download.docker.com/linux/debian/gpg
-        state: present
-
-    - name: Add Docker apt repository
-      apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable
+          - dnf-plugins-core
         state: present
 
     - name: Ensure Docker is installed
-      apt:
-        name: docker-ce
+      package:
+        name: docker
         state: present
-        update_cache: yes
+
+    - name: Check if Docker is installed
+      command: docker --version
+      register: docker_version
+      failed_when: docker_version.rc != 0
+      changed_when: false
 
     - name: Start Docker service
       systemd:
@@ -39,15 +26,19 @@
         state: started
         enabled: yes
 
+    - name: Ensure latest version of Docker is installed
+      command: dnf install -y docker
+      when: docker_version.stdout is search("Docker version 20")
+
     - name: Pull Docker image
       docker_image:
-        name: nginx
+        name: nginx:latest
         source: pull
 
     - name: Run Docker container
       docker_container:
         name: nginx_container
-        image: nginx
+        image: nginx:latest
         state: started
         ports:
           - "80:80"
