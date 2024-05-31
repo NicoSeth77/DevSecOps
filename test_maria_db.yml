@@ -1,52 +1,54 @@
 ---
 - name: Déploiement de MariaDB dans un conteneur Docker sur Fedora CoreOS
-  hosts: all
-  become: yes
-  vars:
-    mariadb_root_password: 'root'
-    mariadb_database: 'example_db'
-    mariadb_user: 'user'
-    mariadb_password: 'user'
-    mariadb_container_name: 'mariadb_container'
-    mariadb_image: 'mariadb:latest'
-    mariadb_port: 5000
+hosts: all
+become: yes
+vars:
+mariadb_root_password: 'root'
+mariadb_database: 'example_db'
+mariadb_user: 'user'
+mariadb_password: 'user'
+mariadb_container_name: 'mariadb_container'
+mariadb_image: 'mariadb:latest'
+mariadb_port: 5000
+mariadb_data_dir: /opt/mariadb_data
 
-  tasks:
+tasks:
+- name: Ensure the MariaDB data directory exists
+file:
+path: "{{ mariadb_data_dir }}"
+state: directory
 
-    - name: Téléchargement de l'image MariaDB depuis Docker Hub
-      docker_image:
-        name: "{{ mariadb_image }}"
-        source: pull
+- name: Set ownership on the MariaDB data directory
+file:
+path: "{{ mariadb_data_dir }}"
+state: directory
+owner: 1001
+group: 1001
+mode: '0755'
 
-    - name: Exécution du conteneur MariaDB
-      docker_container:
-        name: "{{ mariadb_container_name }}"
-        image: "{{ mariadb_image }}"
-        state: started
-        restart_policy: always
-        ports:
-          - "{{ mariadb_port }}:3306"
-        env:
-          MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
-          MARIADB_DATABASE: "{{ mariadb_database }}"
-          MARIADB_USER: "{{ mariadb_user }}"
-          MARIADB_PASSWORD: "{{ mariadb_password }}"
-        volumes:
-          - /opt/mariadb_data:/var/lib/mysql
+- name: Téléchargement de l'image MariaDB depuis Docker Hub
+docker_image:
+name: "{{ mariadb_image }}"
+source: pull
 
-    - name: Attendre que le conteneur MariaDB soit prêt
-      wait_for:
-        port: "{{ mariadb_port }}"
-        delay: 10
-        timeout: 300
+- name: Exécution du conteneur MariaDB
+docker_container:
+name: "{{ mariadb_container_name }}"
+image: "{{ mariadb_image }}"
+state: started
+restart_policy: always
+ports:
+- "{{ mariadb_port }}:3306"
+env:
+MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
+MARIADB_DATABASE: "{{ mariadb_database }}"
+MARIADB_USER: "{{ mariadb_user }}"
+MARIADB_PASSWORD: "{{ mariadb_password }}"
+volumes:
+- "{{ mariadb_data_dir }}:/var/lib/mysql"
 
-    - name: Run MariaDB
-      docker_container:
-        name: "{{ mariadb_container_name }}"
-        image: "{{ mariadb_image }}"
-        state: started
-        ports:
-          - "{{ mariadb_port }}:3306"
-
-
-
+- name: Attendre que le conteneur MariaDB soit prêt
+wait_for:
+port: "{{ mariadb_port }}"
+delay: 10
+timeout: 300
