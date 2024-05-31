@@ -22,3 +22,45 @@
         state: started
         ports:
           - "80:80"
+
+
+# Wireshark
+
+- name: Install and run Wireshark container
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure Docker is installed
+      apt:
+        name: docker.io
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure Docker is started and enabled
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Pull the Wireshark Docker image
+      docker_image:
+        name: lscr.io/linuxserver/wireshark:latest
+        source: pull
+
+    - name: Run Wireshark container
+      docker_container:
+        name: wireshark-c2
+        image: lscr.io/linuxserver/wireshark:latest
+        state: started
+        restart_policy: always
+        network_mode: host
+        env:
+          PUID=1000
+          PGID=1000
+          TZ=ETC/UTC
+        volumes:
+          - /tmp/.X11-unix:/tmp/.X11-unix
+        ports:
+          - 3000:3000
+          - 3001:3001
+
