@@ -1,6 +1,6 @@
 ---
 - name: Déploiement de MariaDB dans un conteneur Docker sur Fedora CoreOS
-  hosts: db_containers
+  hosts: all
   become: yes
   vars:
     mariadb_root_password: 'root'
