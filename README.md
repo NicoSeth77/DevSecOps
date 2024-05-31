@@ -32,7 +32,8 @@ Notre environemment :
 
 Sur le Fedora CoreOs :
 
-
+- docker
+- ssh
 
 
 Sur le Debian :
@@ -76,6 +77,5 @@ Sur Fedora, vérification si le conteneur est bien créé :
 ```bash
 docker ps
 ```
-
 
 
