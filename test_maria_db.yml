@@ -1,0 +1,52 @@
+---
+- name: Déploiement de MariaDB dans un conteneur Docker
+  hosts: db_containers
+  become: yes
+  vars:
+    mariadb_root_password: 'root'
+    mariadb_database: 'example_db'
+    mariadb_user: 'user'
+    mariadb_password: 'user'
+    mariadb_container_name: 'mariadb_container'
+    mariadb_image: 'mariadb:latest'
+    mariadb_port: 5000
+
+  tasks:
+    - name: Installation de Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Démarrage du service Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Téléchargement de l'image MariaDB depuis Docker Hub
+      docker_image:
+        name: "{{ mariadb_image }}"
+        source: pull
+
+    - name: Exécution du conteneur MariaDB
+      docker_container:
+        name: "{{ mariadb_container_name }}"
+        image: "{{ mariadb_image }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ mariadb_port }}:3306"
+        env:
+          MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
+          MARIADB_DATABASE: "{{ mariadb_database }}"
+          MARIADB_USER: "{{ mariadb_user }}"
+          MARIADB_PASSWORD: "{{ mariadb_password }}"
+        volumes:
+          - /opt/mariadb_data:/var/lib/mysql
+
+    - name: Attendre que le conteneur MariaDB soit prêt
+      wait_for:
+        port: "{{ mariadb_port }}"
+        delay: 10
+        timeout: 300
