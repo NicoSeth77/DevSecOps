@@ -1,6 +1,89 @@
 ---
-- name: Déploiement de MariaDB dans un conteneur Docker sur Fedora CoreOS
+- name: Deploy Docker Containers
+  hosts: fedora_coreos
+  become: yes
+  tasks:
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Pull Docker image
+      docker_image:
+        name: nginx
+        source: pull
+
+    - name: Run Docker container
+      docker_container:
+        name: nginx_container
+        image: nginx
+        state: started
+        ports:
+          - "80:80"
+
+- name: Install and run Wireshark container
   hosts: all
+  become: yes
+  tasks:
+    - name: Ensure Docker is installed
+      apt:
+        name: docker.io
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure Docker is started and enabled
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Pull the Wireshark Docker image
+      docker_image:
+        name: lscr.io/linuxserver/wireshark:latest
+        source: pull
+
+    - name: Run Wireshark container
+      docker_container:
+        name: wireshark-c2
+        image: lscr.io/linuxserver/wireshark:latest
+        state: started
+        restart_policy: always
+        network_mode: host
+        env:
+          PUID: 1000
+          PGID: 1000
+          TZ: ETC/UTC
+        volumes:
+          - /tmp/.X11-unix:/tmp/.X11-unix
+        ports:
+          - "3000:3000"
+          - "3001:3001"
+
+- name: Deploy Grafana Container
+  hosts: all
+  become: yes
+  tasks:
+    - name: Pull Grafana Docker image
+      docker_image:
+        name: grafana/grafana
+        source: pull
+
+    - name: Run Grafana container
+      docker_container:
+        name: grafana
+        image: grafana/grafana
+        state: started
+        restart_policy: always
+        ports:
+          - "4000:4000"
+        env:
+          GF_SECURITY_ADMIN_PASSWORD: "admin"  # Set admin password (change as needed)
+          GF_SECURITY_ADMIN_USER: "admin"  # Set admin username (change as needed)
+          GF_SERVER_HTTP_PORT: "4000"  # Change Grafana port to 4000
+
+- name: Deploy MariaDB Container
+  hosts: fedora_coreos
   become: yes
   vars:
     mariadb_root_password: 'root'
@@ -21,17 +104,16 @@
     - name: Set ownership on the MariaDB data directory
       file:
         path: "{{ mariadb_data_dir }}"
-        state: directory
         owner: 1001
         group: 1001
         mode: '0755'
 
-    - name: Téléchargement de l'image MariaDB depuis Docker Hub
+    - name: Pull MariaDB image from Docker Hub
       docker_image:
         name: "{{ mariadb_image }}"
         source: pull
 
-    - name: Exécution du conteneur MariaDB
+    - name: Run MariaDB container
       docker_container:
         name: "{{ mariadb_container_name }}"
         image: "{{ mariadb_image }}"
@@ -47,8 +129,28 @@
         volumes:
           - "{{ mariadb_data_dir }}:/var/lib/mysql"
 
-    - name: Attendre que le conteneur MariaDB soit prêt
+    - name: Wait for MariaDB container to be ready
       wait_for:
         port: "{{ mariadb_port }}"
         delay: 10
         timeout: 300
+
+- name: Deploy Jenkins Container
+  hosts: all
+  become: yes
+  tasks:
+    - name: Pull Jenkins Docker image
+      docker_image:
+        name: jenkins/jenkins
+        source: pull
+
+    - name: Run Jenkins container
+      docker_container:
+        name: jenkins
+        image: jenkins/jenkins
+        state: started
+        restart_policy: always
+        ports:
+          - "8000:8000"
+        env:
+          JENKINS_OPTS: "--httpPort=8000"
