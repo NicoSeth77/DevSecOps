@@ -1,5 +1,5 @@
 ---
-- name: Déploiement de MariaDB dans un conteneur Docker
+- name: Déploiement de MariaDB dans un conteneur Docker sur Fedora CoreOS
   hosts: db_containers
   become: yes
   vars:
@@ -12,18 +12,6 @@
     mariadb_port: 5000
 
   tasks:
-    - name: Installation de Docker
-      apt:
-        name: docker.io
-        state: present
-        update_cache: yes
-
-    - name: Démarrage du service Docker
-      service:
-        name: docker
-        state: started
-        enabled: yes
-
     - name: Téléchargement de l'image MariaDB depuis Docker Hub
       docker_image:
         name: "{{ mariadb_image }}"
