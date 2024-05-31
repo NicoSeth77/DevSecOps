@@ -65,6 +65,23 @@
           - 3001:3001
 
   # Grafana
+  - name: Pull Grafana Docker image
+      docker_image:
+        name: grafana/grafana
+        source: pull
+
+  - name: Run Grafana container
+      docker_container:
+        name: grafana
+        image: grafana/grafana
+        state: started
+        restart_policy: always
+        ports:
+          - "4000:4000"
+        env:
+          GF_SECURITY_ADMIN_PASSWORD: "admin"  # Set admin password (change as needed)
+          GF_SECURITY_ADMIN_USER: "admin"  # Set admin username (change as needed)
+          GF_SERVER_HTTP_PORT: "4000"  # Change Grafana port to 4000
 
 
 
