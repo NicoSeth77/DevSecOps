@@ -15,24 +15,20 @@
         state: started
         enabled: true
 
-    - name: Pull the Wireshark Docker image
+  - name: Pull Grafana Docker image
       docker_image:
-        name: lscr.io/linuxserver/wireshark:latest
+        name: grafana/grafana
         source: pull
 
-    - name: Run Wireshark container
+  - name: Run Grafana container
       docker_container:
-        name: wireshark-c2
-        image: lscr.io/linuxserver/wireshark:latest
+        name: grafana
+        image: grafana/grafana
         state: started
         restart_policy: always
-        network_mode: host
-        env:
-          PUID=1000
-          PGID=1000
-          TZ=ETC/UTC
-        volumes:
-          - /tmp/.X11-unix:/tmp/.X11-unix
         ports:
-          - 3000:3000
-          - 3001:3001
+          - "4000:4000"
+        env:
+          GF_SECURITY_ADMIN_PASSWORD: "admin"  # Set admin password (change as needed)
+          GF_SECURITY_ADMIN_USER: "admin"  # Set admin username (change as needed)
+          GF_SERVER_HTTP_PORT: "4000"  # Change Grafana port to 4000
