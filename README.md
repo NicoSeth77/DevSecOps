@@ -60,8 +60,8 @@ __192.168.10.207 ansible_user=utec ansible_ssh_private_key_file=/home/utec/.ssh/
 
 Le fichier __deploy-docker.yml__ contient des tâches telles que la sélection d'images Docker, les noms de conteneurs, les ports, etc.
 Dans ce fichier nous avons mis plusieurs conteneurs :
-    - Wireshark sur le port 3000 --> 192.168.10.207:3000
-    - Grafana sur le port 4000 --> 192.168.10.207:4000 
+- Wireshark sur le port 3000 --> 192.168.10.207:3000
+- Grafana sur le port 4000 --> 192.168.10.207:4000 
     <!--  MariaDB sur le port 5000 192.168.10.207:5000 --> 
 
 Execution du Ansible playbook pour deployer le conteneur Docker :
