@@ -43,12 +43,31 @@ sudo apt update
 sudo apt install ansible
 ```
 
-Pour cloner la repertoire 
+Pour cloner le repertoire 
 
 ```bash
 sudo apt install git
 git clone https://github.com/NicoSeth77/DevSecOps
 ```
 
+Le fichier __hosts.ini__ spécifie les hôtes cibles ainsi que les ports pour le déploiement :
 
+__192.168.10.207 ansible_user=utec ansible_ssh_private_key_file=/home/utec/.ssh/id_rsa__
 
+- IP de la machine cible
+- ansible_user correspond à l'utilisateur du Debian
+- ansible_ssh_private_key_file correspond à la clé privée sur le Fedora CoreOs
+
+Le fichier __deploy-docker.yml__ contient des tâches telles que la sélection d'images Docker, les noms de conteneurs, les ports, etc.
+
+Execution du Ansible playbook pour deployer le conteneur Docker :
+
+```bash
+ansible-playbook -i hosts.ini deploy-docker.yml
+```
+
+Sur Fedora, vérification si le conteneur est bien créé :
+
+```bash
+docker ps
+```
