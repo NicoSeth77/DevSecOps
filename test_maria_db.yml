@@ -12,6 +12,13 @@
     mariadb_port: 5000
 
   tasks:
+     - name: Ajouter l'utilisateur au groupe Docker
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+      become: yes
+      
     - name: Téléchargement de l'image MariaDB depuis Docker Hub
       docker_image:
         name: "{{ mariadb_image }}"
@@ -46,3 +53,5 @@
         state: started
         ports:
           - "5000:5000"
+
+
