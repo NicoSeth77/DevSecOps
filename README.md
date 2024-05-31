@@ -62,7 +62,8 @@ Le fichier __deploy-docker.yml__ contient des tâches telles que la sélection d
 Dans ce fichier nous avons mis plusieurs conteneurs :
 - Wireshark sur le port 3000 --> 192.168.10.207:3000
 - Grafana sur le port 4000 --> 192.168.10.207:4000 
-    <!--  MariaDB sur le port 5000 192.168.10.207:5000 --> 
+- MariaDB sur le port 5000 --> 192.168.10.207:5000
+- Jenkins sur le port 8000 --> 192.168.10.207:8000
 
 Execution du Ansible playbook pour deployer le conteneur Docker :
 
