@@ -38,3 +38,11 @@
         port: "{{ mariadb_port }}"
         delay: 10
         timeout: 300
+
+    - name: Run MariaDB
+      docker_container:
+        name: "{{ mariadb_container_name }}"
+        image: "{{ mariadb_image }}"
+        state: started
+        ports:
+          - "5000:5000"
