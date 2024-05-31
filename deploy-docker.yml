@@ -3,7 +3,6 @@
   hosts: fedora_coreos
   become: yes
   tasks:
-
     - name: Start Docker service
       systemd:
         name: docker
@@ -23,54 +22,18 @@
         ports:
           - "80:80"
 
-
-# Wireshark
-
-- name: Install and run Wireshark container
-  hosts: all
-  become: yes
-  tasks:
-    - name: Ensure Docker is installed
-      apt:
-        name: docker.io
-        state: present
-      when: ansible_os_family == "Debian"
-
     - name: Ensure Docker is started and enabled
       service:
         name: docker
         state: started
         enabled: true
-
-    - name: Pull the Wireshark Docker image
-      docker_image:
-        name: lscr.io/linuxserver/wireshark:latest
-        source: pull
-
-    - name: Run Wireshark container
-      docker_container:
-        name: wireshark-c2
-        image: lscr.io/linuxserver/wireshark:latest
-        state: started
-        restart_policy: always
-        network_mode: host
-        env:
-          PUID=1000
-          PGID=1000
-          TZ=ETC/UTC
-        volumes:
-          - /tmp/.X11-unix:/tmp/.X11-unix
-        ports:
-          - 3000:3000
-          - 3001:3001
-
-  # Grafana
-  - name: Pull Grafana Docker image
+        
+    - name: Pull Grafana Docker image
       docker_image:
         name: grafana/grafana
         source: pull
 
-  - name: Run Grafana container
+    - name: Run Grafana container
       docker_container:
         name: grafana
         image: grafana/grafana
@@ -85,61 +48,75 @@
 
 
 
+- name: Deploy MariaDB Container
+  hosts: fedora_coreos
+  become: yes
+  vars:
+    mariadb_root_password: 'root'
+    mariadb_database: 'example_db'
+    mariadb_user: 'user'
+    mariadb_password: 'user'
+    mariadb_container_name: 'mariadb_container'
+    mariadb_image: 'mariadb:latest'
+    mariadb_port: 5000
+    mariadb_data_dir: /opt/mariadb_data
 
-  # MySql
-  - name: Déploiement de MariaDB dans un conteneur Docker sur Fedora CoreOS
-    hosts: all
-    become: yes
-    vars:
-      mariadb_root_password: 'root'
-      mariadb_database: 'example_db'
-      mariadb_user: 'user'
-      mariadb_password: 'user'
-      mariadb_container_name: 'mariadb_container'
-      mariadb_image: 'mariadb:latest'
-      mariadb_port: 5000
-      mariadb_data_dir: /opt/mariadb_data
-  
-    tasks:
-      - name: Ensure the MariaDB data directory exists
-        file:
-          path: "{{ mariadb_data_dir }}"
-          state: directory
-  
-      - name: Set ownership on the MariaDB data directory
-        file:
-          path: "{{ mariadb_data_dir }}"
-          state: directory
-          owner: 1001
-          group: 1001
-          mode: '0755'
-  
-      - name: Téléchargement de l'image MariaDB depuis Docker Hub
-        docker_image:
-          name: "{{ mariadb_image }}"
-          source: pull
-  
-      - name: Exécution du conteneur MariaDB
-        docker_container:
-          name: "{{ mariadb_container_name }}"
-          image: "{{ mariadb_image }}"
-          state: started
-          restart_policy: always
-          ports:
-            - "{{ mariadb_port }}:3306"
-          env:
-            MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
-            MARIADB_DATABASE: "{{ mariadb_database }}"
-            MARIADB_USER: "{{ mariadb_user }}"
-            MARIADB_PASSWORD: "{{ mariadb_password }}"
-          volumes:
-            - "{{ mariadb_data_dir }}:/var/lib/mysql"
-  
-      - name: Attendre que le conteneur MariaDB soit prêt
-        wait_for:
-          port: "{{ mariadb_port }}"
-          delay: 10
-          timeout: 300
+  tasks:
+    - name: Ensure the MariaDB data directory exists
+      file:
+        path: "{{ mariadb_data_dir }}"
+        state: directory
 
+    - name: Set ownership on the MariaDB data directory
+      file:
+        path: "{{ mariadb_data_dir }}"
+        owner: 1001
+        group: 1001
+        mode: '0755'
 
-  # Jenkins
+    - name: Pull MariaDB image from Docker Hub
+      docker_image:
+        name: "{{ mariadb_image }}"
+        source: pull
+
+    - name: Run MariaDB container
+      docker_container:
+        name: "{{ mariadb_container_name }}"
+        image: "{{ mariadb_image }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ mariadb_port }}:3306"
+        env:
+          MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
+          MARIADB_DATABASE: "{{ mariadb_database }}"
+          MARIADB_USER: "{{ mariadb_user }}"
+          MARIADB_PASSWORD: "{{ mariadb_password }}"
+        volumes:
+          - "{{ mariadb_data_dir }}:/var/lib/mysql"
+
+    - name: Wait for MariaDB container to be ready
+      wait_for:
+        port: "{{ mariadb_port }}"
+        delay: 10
+        timeout: 300
+
+- name: Deploy Jenkins Container
+  hosts: all
+  become: yes
+  tasks:
+    - name: Pull Jenkins Docker image
+      docker_image:
+        name: jenkins/jenkins
+        source: pull
+
+    - name: Run Jenkins container
+      docker_container:
+        name: jenkins
+        image: jenkins/jenkins
+        state: started
+        restart_policy: always
+        ports:
+          - "8000:8000"
+        env:
+          JENKINS_OPTS: "--httpPort=8000"
