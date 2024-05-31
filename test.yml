@@ -17,18 +17,22 @@
 
     - name: Pull the Wireshark Docker image
       docker_image:
-        name: jess/wireshark
+        name: lscr.io/linuxserver/wireshark:latest
         source: pull
 
     - name: Run Wireshark container
       docker_container:
-        name: wireshark
-        image: jess/wireshark
+        name: wireshark-c2
+        image: lscr.io/linuxserver/wireshark:latest
         state: started
-        ports:
-          - "3389:3389"
+        restart_policy: always
+        network_mode: host
+        env:
+          PUID=1000
+          PGID=1000
+          TZ=ETC/UTC
         volumes:
           - /tmp/.X11-unix:/tmp/.X11-unix
-        env:
-          DISPLAY: "{{ ansible_env.DISPLAY }}"
-
+        ports:
+          - 3000:3000
+          - 3001:3001
