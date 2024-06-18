@@ -1,164 +1,70 @@
 ---
-- name: Deploy Docker Containers and Install JUnit
-  hosts: fedora_coreos
+- name: Install and configure JUnit
+  hosts: all
   become: yes
-  vars:
-    mariadb_root_password: 'root'
-    mariadb_database: 'example_db'
-    mariadb_user: 'user'
-    mariadb_password: 'user'
-    mariadb_container_name: 'mariadb_container'
-    mariadb_image: 'mariadb:latest'
-    mariadb_port: 5000
-    mariadb_data_dir: /opt/mariadb_data
-    junit_version: "4.13.2"
-    hamcrest_version: "2.2"
-    download_dir: "/opt/junit"
 
   tasks:
-    - name: Ensure download directory exists
-      file:
-        path: "{{ download_dir }}"
-        state: directory
+    - name: Ensure Java is installed
+      apt:
+        name: openjdk-11-jdk
+        state: present
+      when: ansible_os_family == "Debian"
 
-    - name: Install OpenJDK (Fedora-based)
-      dnf:
+    - name: Ensure Java is installed
+      yum:
         name: java-11-openjdk-devel
         state: present
+      when: ansible_os_family == "RedHat"
 
-    - name: Download JUnit JAR
+    - name: Download JUnit jar
       get_url:
-        url: "https://search.maven.org/remotecontent?filepath=junit/junit/{{ junit_version }}/junit-{{ junit_version }}.jar"
-        dest: "{{ download_dir }}/junit-{{ junit_version }}.jar"
-        mode: '0755'
+        url: https://search.maven.org/remotecontent?filepath=junit/junit/4.13.2/junit-4.13.2.jar
+        dest: /opt/junit-4.13.2.jar
 
-    - name: Download Hamcrest Core JAR
+    - name: Download Hamcrest jar (JUnit dependency)
       get_url:
-        url: "https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/{{ hamcrest_version }}/hamcrest-core-{{ hamcrest_version }}.jar"
-        dest: "{{ download_dir }}/hamcrest-core-{{ hamcrest_version }}.jar"
-        mode: '0755'
+        url: https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
+        dest: /opt/hamcrest-core-1.3.jar
 
-    - name: Set environment variable for JUnit
-      blockinfile:
-        path: /etc/profile
-        block: |
-          export CLASSPATH=$CLASSPATH:{{ download_dir }}/junit-{{ junit_version }}.jar:{{ download_dir }}/hamcrest-core-{{ hamcrest_version }}.jar
-        create: yes
-        state: present
+    - name: Create JUnit service file
+      copy:
+        dest: /etc/systemd/system/junit.service
+        content: |
+          [Unit]
+          Description=JUnit Service
+          After=network.target
 
-    - name: Apply environment variables
-      shell: source /etc/profile
+          [Service]
+          Type=simple
+          ExecStart=/usr/bin/java -jar /opt/junit-4.13.2.jar
+          ExecStartPost=/bin/bash -c 'echo "Running on port 6000"'
 
-    - name: Start Docker service
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd to apply new service
+      command: systemctl daemon-reload
+
+    - name: Enable JUnit service to start on boot
       systemd:
-        name: docker
-        state: started
+        name: junit
         enabled: yes
 
-    - name: Pull Nginx Docker image
-      community.docker.docker_image:
-        name: nginx
-        source: pull
-        use_backend: "docker-py"
-
-    - name: Run Nginx container
-      community.docker.docker_container:
-        name: nginx_container
-        image: nginx
+    - name: Start JUnit service
+      systemd:
+        name: junit
         state: started
-        ports:
-          - "80:80"
-        restart_policy: always
-        use_backend: "docker-py"
 
-    - name: Pull Grafana Docker image
-      community.docker.docker_image:
-        name: grafana/grafana
-        source: pull
-        use_backend: "docker-py"
+    - name: Ensure firewall is allowing port 6000
+      ufw:
+        rule: allow
+        port: 6000
+        proto: tcp
+      when: ansible_os_family == "Debian"
 
-    - name: Run Grafana container
-      community.docker.docker_container:
-        name: grafana
-        image: grafana/grafana
-        state: started
-        restart_policy: always
-        ports:
-          - "4000:4000"
-        env:
-          GF_SECURITY_ADMIN_PASSWORD: "admin"  # Change as needed
-          GF_SECURITY_ADMIN_USER: "admin"      # Change as needed
-          GF_SERVER_HTTP_PORT: "4000"
-        use_backend: "docker-py"
-
-    - name: Ensure the MariaDB data directory exists
-      file:
-        path: "{{ mariadb_data_dir }}"
-        state: directory
-
-    - name: Set ownership on the MariaDB data directory
-      file:
-        path: "{{ mariadb_data_dir }}"
-        owner: 1001
-        group: 1001
-        mode: '0755'
-
-    - name: Pull MariaDB image from Docker Hub
-      community.docker.docker_image:
-        name: "{{ mariadb_image }}"
-        source: pull
-        use_backend: "docker-py"
-
-    - name: Run MariaDB container
-      community.docker.docker_container:
-        name: "{{ mariadb_container_name }}"
-        image: "{{ mariadb_image }}"
-        state: started
-        restart_policy: always
-        ports:
-          - "{{ mariadb_port }}:3306"
-        env:
-          MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
-          MARIADB_DATABASE: "{{ mariadb_database }}"
-          MARIADB_USER: "{{ mariadb_user }}"
-          MARIADB_PASSWORD: "{{ mariadb_password }}"
-        volumes:
-          - "{{ mariadb_data_dir }}:/var/lib/mysql"
-        use_backend: "docker-py"
-
-    - name: Wait for MariaDB container to be ready
-      wait_for:
-        port: "{{ mariadb_port }}"
-        delay: 10
-        timeout: 300
-
-    - name: Fetch MariaDB container logs
-      command: "docker logs {{ mariadb_container_name }}"
-      register: mariadb_logs
-      failed_when: false
-
-    - name: Display MariaDB container logs
-      debug:
-        msg: "{{ mariadb_logs.stdout }}"
-
-- name: Deploy Jenkins Container
-  hosts: fedora_coreos
-  become: yes
-  tasks:
-    - name: Pull Jenkins Docker image
-      community.docker.docker_image:
-        name: jenkins/jenkins
-        source: pull
-        use_backend: "docker-py"
-
-    - name: Run Jenkins container
-      community.docker.docker_container:
-        name: jenkins
-        image: jenkins/jenkins
-        state: started
-        restart_policy: always
-        ports:
-          - "8000:8080"  # Correcting Jenkins default port mapping
-        env:
-          JENKINS_OPTS: "--httpPort=8080"
-        use_backend: "docker-py"
+    - name: Ensure firewall is allowing port 6000
+      firewalld:
+        port: 6000/tcp
+        permanent: yes
+        state: enabled
+      when: ansible_os_family == "RedHat"
