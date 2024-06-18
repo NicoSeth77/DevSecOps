@@ -1,44 +1,60 @@
-version: 2.1
+- name: Install and run Wireshark container
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure Docker is installed
+      apt:
+        name: docker.io
+        state: present
+      when: ansible_os_family == "Debian"
 
-executors:
-  node-executor:
-    docker:
-      - image: circleci/node:14
-    working_directory: ~/repo
+    - name: Ensure Docker is started and enabled
+      service:
+        name: docker
+        state: started
+        enabled: true
 
-jobs:
-  build:
-    executor: node-executor
-    steps:
-      - checkout
-      - run:
-          name: Install Dependencies
-          command: npm install
-      - run:
-          name: Build Project
-          command: npm run build
-      - run:
-          name: Start Application
-          command: |
-            nohup npm start &
-            sleep 5
+    - name: Pull Grafana Docker image
+      docker_image:
+        name: grafana/grafana
+        source: pull
 
-  test:
-    executor: node-executor
-    steps:
-      - checkout
-      - run:
-          name: Install Dependencies
-          command: npm install
-      - run:
-          name: Run Tests
-          command: npm test
+    - name: Run Grafana container
+      docker_container:
+        name: grafana
+        image: grafana/grafana
+        state: started
+        restart_policy: always
+        ports:
+          - "4000:4000"
+        env:
+          GF_SECURITY_ADMIN_PASSWORD: "admin"
+          GF_SECURITY_ADMIN_USER: "admin"
+          GF_SERVER_HTTP_PORT: "4000"
 
-workflows:
-  version: 2
-  build-and-test:
-    jobs:
-      - build
-      - test:
-          requires:
-            - build
+    - name: Install PHP and Composer
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - php-cli
+        - php-mbstring
+        - php-xml
+        - composer
+
+    - name: Install Codeception globally
+      composer:
+        global: true
+        command: require "codeception/codeception"
+
+    - name: Initialize Codeception
+      command: codecept init
+
+    - name: Copy Codeception configuration
+      copy:
+        src: /path/to/your/codeception.yml  # Replace with the path to your Codeception configuration file
+        dest: /path/in/your/container/codeception.yml  # Replace with the destination path in your Grafana container
+        remote_src: yes
+
+    # Additional tasks related to running Codeception tests could follow here
+
