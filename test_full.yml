@@ -1,8 +1,61 @@
 ---
-- name: Deploy Docker Containers
+- name: Deploy Docker Containers and Install JUnit
   hosts: fedora_coreos
   become: yes
+  vars:
+    mariadb_root_password: 'root'
+    mariadb_database: 'example_db'
+    mariadb_user: 'user'
+    mariadb_password: 'user'
+    mariadb_container_name: 'mariadb_container'
+    mariadb_image: 'mariadb:latest'
+    mariadb_port: 5000
+    mariadb_data_dir: /opt/mariadb_data
+    junit_version: "4.13.2"
+    hamcrest_version: "2.2"
+    download_dir: "/opt/junit"
+
   tasks:
+    - name: Ensure download directory exists
+      file:
+        path: "{{ download_dir }}"
+        state: directory
+
+    - name: Install OpenJDK (Debian-based)
+      apt:
+        name: openjdk-11-jdk
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Install OpenJDK (Red Hat-based)
+      yum:
+        name: java-11-openjdk-devel
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name: Download JUnit JAR
+      get_url:
+        url: "https://search.maven.org/remotecontent?filepath=junit/junit/{{ junit_version }}/junit-{{ junit_version }}.jar"
+        dest: "{{ download_dir }}/junit-{{ junit_version }}.jar"
+        mode: '0755'
+
+    - name: Download Hamcrest Core JAR
+      get_url:
+        url: "https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/{{ hamcrest_version }}/hamcrest-core-{{ hamcrest_version }}.jar"
+        dest: "{{ download_dir }}/hamcrest-core-{{ hamcrest_version }}.jar"
+        mode: '0755'
+
+    - name: Set environment variable for JUnit
+      blockinfile:
+        path: /etc/profile
+        block: |
+          export CLASSPATH=$CLASSPATH:{{ download_dir }}/junit-{{ junit_version }}.jar:{{ download_dir }}/hamcrest-core-{{ hamcrest_version }}.jar
+        create: yes
+        state: present
+
+    - name: Apply environment variables
+      shell: source /etc/profile
+
     - name: Start Docker service
       systemd:
         name: docker
@@ -41,20 +94,6 @@
           GF_SECURITY_ADMIN_USER: "admin"      # Change as needed
           GF_SERVER_HTTP_PORT: "4000"
 
-- name: Deploy MariaDB Container
-  hosts: fedora_coreos
-  become: yes
-  vars:
-    mariadb_root_password: 'root'
-    mariadb_database: 'example_db'
-    mariadb_user: 'user'
-    mariadb_password: 'user'
-    mariadb_container_name: 'mariadb_container'
-    mariadb_image: 'mariadb:latest'
-    mariadb_port: 5000
-    mariadb_data_dir: /opt/mariadb_data
-
-  tasks:
     - name: Ensure the MariaDB data directory exists
       file:
         path: "{{ mariadb_data_dir }}"
@@ -93,6 +132,15 @@
         port: "{{ mariadb_port }}"
         delay: 10
         timeout: 300
+
+    - name: Fetch MariaDB container logs
+      command: "docker logs {{ mariadb_container_name }}"
+      register: mariadb_logs
+      failed_when: false
+
+    - name: Display MariaDB container logs
+      debug:
+        msg: "{{ mariadb_logs.stdout }}"
 
 - name: Deploy Jenkins Container
   hosts: all
