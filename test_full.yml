@@ -33,6 +33,12 @@
         state: present
       when: ansible_os_family == 'RedHat'
 
+    - name: Install OpenJDK (Fedora)
+      dnf:
+        name: java-11-openjdk-devel
+        state: present
+      when: ansible_os_family == 'Fedora'
+
     - name: Download JUnit JAR
       get_url:
         url: "https://search.maven.org/remotecontent?filepath=junit/junit/{{ junit_version }}/junit-{{ junit_version }}.jar"
