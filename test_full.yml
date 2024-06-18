@@ -1,0 +1,115 @@
+---
+- name: Deploy Docker Containers
+  hosts: fedora_coreos
+  become: yes
+  tasks:
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Pull Nginx Docker image
+      docker_image:
+        name: nginx
+        source: pull
+
+    - name: Run Nginx container
+      docker_container:
+        name: nginx_container
+        image: nginx
+        state: started
+        ports:
+          - "80:80"
+        restart_policy: always
+
+    - name: Pull Grafana Docker image
+      docker_image:
+        name: grafana/grafana
+        source: pull
+
+    - name: Run Grafana container
+      docker_container:
+        name: grafana
+        image: grafana/grafana
+        state: started
+        restart_policy: always
+        ports:
+          - "4000:4000"
+        env:
+          GF_SECURITY_ADMIN_PASSWORD: "admin"  # Change as needed
+          GF_SECURITY_ADMIN_USER: "admin"      # Change as needed
+          GF_SERVER_HTTP_PORT: "4000"
+
+- name: Deploy MariaDB Container
+  hosts: fedora_coreos
+  become: yes
+  vars:
+    mariadb_root_password: 'root'
+    mariadb_database: 'example_db'
+    mariadb_user: 'user'
+    mariadb_password: 'user'
+    mariadb_container_name: 'mariadb_container'
+    mariadb_image: 'mariadb:latest'
+    mariadb_port: 5000
+    mariadb_data_dir: /opt/mariadb_data
+
+  tasks:
+    - name: Ensure the MariaDB data directory exists
+      file:
+        path: "{{ mariadb_data_dir }}"
+        state: directory
+
+    - name: Set ownership on the MariaDB data directory
+      file:
+        path: "{{ mariadb_data_dir }}"
+        owner: 1001
+        group: 1001
+        mode: '0755'
+
+    - name: Pull MariaDB image from Docker Hub
+      docker_image:
+        name: "{{ mariadb_image }}"
+        source: pull
+
+    - name: Run MariaDB container
+      docker_container:
+        name: "{{ mariadb_container_name }}"
+        image: "{{ mariadb_image }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ mariadb_port }}:3306"
+        env:
+          MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
+          MARIADB_DATABASE: "{{ mariadb_database }}"
+          MARIADB_USER: "{{ mariadb_user }}"
+          MARIADB_PASSWORD: "{{ mariadb_password }}"
+        volumes:
+          - "{{ mariadb_data_dir }}:/var/lib/mysql"
+
+    - name: Wait for MariaDB container to be ready
+      wait_for:
+        port: "{{ mariadb_port }}"
+        delay: 10
+        timeout: 300
+
+- name: Deploy Jenkins Container
+  hosts: all
+  become: yes
+  tasks:
+    - name: Pull Jenkins Docker image
+      docker_image:
+        name: jenkins/jenkins
+        source: pull
+
+    - name: Run Jenkins container
+      docker_container:
+        name: jenkins
+        image: jenkins/jenkins
+        state: started
+        restart_policy: always
+        ports:
+          - "8000:8080"  # Correcting Jenkins default port mapping
+        env:
+          JENKINS_OPTS: "--httpPort=8080"  # Correcting Jenkins default port
