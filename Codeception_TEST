@@ -1,0 +1,26 @@
+---
+- name: Deploy Codeception Docker container
+  hosts: fedora_coreos_server
+  become: true
+
+  tasks:
+    - name: Ensure Docker is running
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Pull Codeception Docker image
+      docker_image:
+        name: codeception/codeception
+        source: pull
+
+    - name: Run Codeception Docker container
+      docker_container:
+        name: codeception
+        image: codeception/codeception
+        state: started
+        restart_policy: always
+        volumes:
+          - /path/to/your/tests:/tests
+        command: codecept run
