@@ -21,23 +21,10 @@
         path: "{{ download_dir }}"
         state: directory
 
-    - name: Install OpenJDK (Debian-based)
-      apt:
-        name: openjdk-11-jdk
-        state: present
-      when: ansible_os_family == 'Debian'
-
-    - name: Install OpenJDK (Red Hat-based)
-      yum:
-        name: java-11-openjdk-devel
-        state: present
-      when: ansible_os_family == 'RedHat'
-
-    - name: Install OpenJDK (Fedora)
+    - name: Install OpenJDK (Fedora-based)
       dnf:
         name: java-11-openjdk-devel
         state: present
-      when: ansible_os_family == 'Fedora'
 
     - name: Download JUnit JAR
       get_url:
@@ -155,7 +142,7 @@
         msg: "{{ mariadb_logs.stdout }}"
 
 - name: Deploy Jenkins Container
-  hosts: all
+  hosts: fedora_coreos
   become: yes
   tasks:
     - name: Pull Jenkins Docker image
