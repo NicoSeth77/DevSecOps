@@ -63,26 +63,29 @@
         enabled: yes
 
     - name: Pull Nginx Docker image
-      docker_image:
+      community.docker.docker_image:
         name: nginx
         source: pull
+        use_backend: "docker-py"
 
     - name: Run Nginx container
-      docker_container:
+      community.docker.docker_container:
         name: nginx_container
         image: nginx
         state: started
         ports:
           - "80:80"
         restart_policy: always
+        use_backend: "docker-py"
 
     - name: Pull Grafana Docker image
-      docker_image:
+      community.docker.docker_image:
         name: grafana/grafana
         source: pull
+        use_backend: "docker-py"
 
     - name: Run Grafana container
-      docker_container:
+      community.docker.docker_container:
         name: grafana
         image: grafana/grafana
         state: started
@@ -93,6 +96,7 @@
           GF_SECURITY_ADMIN_PASSWORD: "admin"  # Change as needed
           GF_SECURITY_ADMIN_USER: "admin"      # Change as needed
           GF_SERVER_HTTP_PORT: "4000"
+        use_backend: "docker-py"
 
     - name: Ensure the MariaDB data directory exists
       file:
@@ -107,12 +111,13 @@
         mode: '0755'
 
     - name: Pull MariaDB image from Docker Hub
-      docker_image:
+      community.docker.docker_image:
         name: "{{ mariadb_image }}"
         source: pull
+        use_backend: "docker-py"
 
     - name: Run MariaDB container
-      docker_container:
+      community.docker.docker_container:
         name: "{{ mariadb_container_name }}"
         image: "{{ mariadb_image }}"
         state: started
@@ -126,6 +131,7 @@
           MARIADB_PASSWORD: "{{ mariadb_password }}"
         volumes:
           - "{{ mariadb_data_dir }}:/var/lib/mysql"
+        use_backend: "docker-py"
 
     - name: Wait for MariaDB container to be ready
       wait_for:
@@ -147,12 +153,13 @@
   become: yes
   tasks:
     - name: Pull Jenkins Docker image
-      docker_image:
+      community.docker.docker_image:
         name: jenkins/jenkins
         source: pull
+        use_backend: "docker-py"
 
     - name: Run Jenkins container
-      docker_container:
+      community.docker.docker_container:
         name: jenkins
         image: jenkins/jenkins
         state: started
@@ -160,4 +167,5 @@
         ports:
           - "8000:8080"  # Correcting Jenkins default port mapping
         env:
-          JENKINS_OPTS: "--httpPort=8080"  # Correcting Jenkins default port
+          JENKINS_OPTS: "--httpPort=8080"
+        use_backend: "docker-py"
