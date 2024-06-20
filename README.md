@@ -42,9 +42,13 @@ Création de la VM Fedora CoreOS:
 •	Pour pouvoir récupérer le fichier sur le serveur Fedora CoreOs un des moyens le plus simple est d’utiliser un serveur Python3 sur la machine qui contient le ficher (Il faut donc avoir Python3 installé sur cette dernière) :
 python3 -m http.server (Cette commande doit être utilisée une fois dans le repertoire ou se trouve le fichier que l’on souhaite partager)
 •	Une fois le fichier créer il faudra le récupérer sur le serveur Fedora CoreOs via une requête Curl :
+
+
 curl -O adresseipdelamachine:8000/chemin/fichier_d_ignition.ign
 
 •	Une fois le fichier récupéré il ne reste qu’a installer ce fichier de configuration sur le serveur Fedora CoreOS :
+
+
 sudo coreos-installer install /dev/sda --ignition-file fichier_d_ignition.ign
 
 •	Une fois l’installation terminé on éteint la machine :
