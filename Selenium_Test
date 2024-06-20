@@ -1,3 +1,19 @@
+- name: Install and run Selenium Container
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure Docker is installed
+      apt:
+        name: docker.io
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure Docker is started and enabled
+      service:
+        name: docker
+        state: started
+        enabled: true
+
 - name: Deploy Selenium Container
   hosts: all
   become: yes
