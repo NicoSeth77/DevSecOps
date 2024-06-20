@@ -1,0 +1,20 @@
+---
+- name: Deploy Jenkins Container
+  hosts: all
+  become: yes
+  tasks:
+    - name: Pull Jenkins Docker image
+      docker_image:
+        name: jenkins/jenkins
+        source: pull
+
+    - name: Run Jenkins container
+      docker_container:
+        name: jenkins
+        image: jenkins/jenkins
+        state: started
+        restart_policy: always
+        ports:
+          - "8000:8000"
+        env:
+          JENKINS_OPTS: "--httpPort=8000"
