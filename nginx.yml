@@ -1,0 +1,24 @@
+---
+- name: Deploy NGINX and Grafana Containers
+  hosts: fedora_coreos
+  become: yes
+  tasks:
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Pull NGINX Docker image
+      docker_image:
+        name: nginx
+        source: pull
+
+    - name: Run NGINX container
+      docker_container:
+        name: nginx_container
+        image: nginx
+        state: started
+        ports:
+          - "80:80"
+
