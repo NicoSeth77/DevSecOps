@@ -30,6 +30,26 @@ Notre environemment :
 
 # Installation
 
+Création de la VM Fedora CoreOS:
+•	Installation et configuration initial : Fedora CoreOS nécessite une approche différente dans sa mise en place, par rapport à un système d’exploitation plus populaire (Debian, Windows, Kali...)
+
+•	Il faut tout d’abord télécharger l’image de l’OS : https://fedoraproject.org/fr/coreos/download?stream=stable
+
+•	Une fois l’image montée et démarrée il faut configurer un fichier de configuration initial appeler un fichier d’ignition sur un poste différent, comme suit :
+
+•	Pour pouvoir récupérer le fichier sur le serveur Fedora CoreOs un des moyens le plus simple est d’utiliser un serveur Python3 sur la machine qui contient le ficher (Il faut donc avoir Python3 installé sur cette dernière) :
+python3 -m http.server (Cette commande doit être utilisée une fois dans le repertoire ou se trouve le fichier que l’on souhaite partager)
+•	Une fois le fichier créer il faudra le récupérer sur le serveur Fedora CoreOs via une requête Curl :
+curl -O adresseipdelamachine:8000/chemin/fichier_d_ignition.ign
+
+•	Une fois le fichier récupéré il ne reste qu’a installer ce fichier de configuration sur le serveur Fedora CoreOS :
+sudo coreos-installer install /dev/sda --ignition-file fichier_d_ignition.ign
+
+•	Une fois l’installation terminé on éteint la machine :
+poweroff
+
+•	Avant de relancer la machine il faut bien penser à démonter l’image depuis le contrôleur de virtualisation sinon la VM se lancera automatiquement dessus au lieu de charger la nouvelle configuration. Une fois cela fait on peut relancer la machine.
+
 Sur le Fedora CoreOs :
 
 - docker
