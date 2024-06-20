@@ -1,0 +1,17 @@
+- name: Deploy Selenium Container
+  hosts: all
+  become: yes
+  tasks:
+    - name: Pull Selenium image
+      docker_image:
+        name: selenium/standalone-firefox:4.21.0-20240522
+        source: pull
+
+    - name: Run Selenium container
+      docker_container:
+        name: selenium
+        image: selenium/standalone-firefox:4.21.0-20240522
+        state: started
+        restart_policy: always
+        ports:
+          - "4444:4444"
