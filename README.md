@@ -31,6 +31,8 @@ Notre environemment :
 # Installation
 
 Création de la VM Fedora CoreOS:
+
+
 •	Installation et configuration initial : Fedora CoreOS nécessite une approche différente dans sa mise en place, par rapport à un système d’exploitation plus populaire (Debian, Windows, Kali...)
 
 •	Il faut tout d’abord télécharger l’image de l’OS : https://fedoraproject.org/fr/coreos/download?stream=stable
