@@ -56,6 +56,10 @@ poweroff
 
 •	Avant de relancer la machine il faut bien penser à démonter l’image depuis le contrôleur de virtualisation sinon la VM se lancera automatiquement dessus au lieu de charger la nouvelle configuration. Une fois cela fait on peut relancer la machine.
 
+•	Si j'avais vous avez besoins d'installer en brut une extention, un logiciel ou autre au système vous pouvez utilisez la commande suivante:
+
+rpm-ostree install "nom du programme"
+
 Sur le Fedora CoreOs :
 
 - docker
